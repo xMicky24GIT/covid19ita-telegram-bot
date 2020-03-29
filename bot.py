@@ -201,7 +201,8 @@ def callback_grafico_nazionale_cumulativo(query, chat, message):
 @bot.callback("callback_bot_info")
 def callback_bot_info(query, chat, message):
     btns = botogram.Buttons()
-    btns[0].callback("Indietro", "callback_start")
+    btns.url("Codice sorgente", "https://github.com/xMicky24GIT/covid19ita-telegram-bot")
+    btns[1].callback("Indietro", "callback_start")
     message.edit(
         "Ho iniziato a creare questo bot principalmente per trasformare"
         " questa quarantena in qualcosa di positivo ed imparare qualcosa di"
