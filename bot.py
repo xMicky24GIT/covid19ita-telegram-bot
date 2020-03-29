@@ -6,7 +6,7 @@ from datetime import datetime
 import os
 
 
-bot = botogram.create("YOUR_API_EY")
+bot = botogram.create("YOUR_API_KEY")
 
 try:
     os.makedirs('grafici/nazionali')
@@ -201,7 +201,7 @@ def callback_grafico_nazionale_cumulativo(query, chat, message):
 @bot.callback("callback_bot_info")
 def callback_bot_info(query, chat, message):
     btns = botogram.Buttons()
-    btns.url("Codice sorgente", "https://github.com/xMicky24GIT/covid19ita-telegram-bot")
+    btns[0].url("Codice sorgente", "https://github.com/xMicky24GIT/covid19ita-telegram-bot")
     btns[1].callback("Indietro", "callback_start")
     message.edit(
         "Ho iniziato a creare questo bot principalmente per trasformare"
