@@ -6,7 +6,7 @@ from datetime import datetime
 import os
 
 
-bot = botogram.create("858716374:AAGz1-KFV5dvjojqhLjUTbvO0yrJOjhYSh0")
+bot = botogram.create("YOUR_API_EY")
 
 try:
     os.makedirs('grafici/nazionali')
