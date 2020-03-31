@@ -207,7 +207,7 @@ def callback_bot_info(query, chat, message):
         "Ho iniziato a creare questo bot principalmente per trasformare"
         " questa quarantena in qualcosa di positivo ed imparare qualcosa di"
         " nuovo ma allo stesso tempo creare qualcosa di carino e utile.\n"
-        "Puoi trovare il codice sorgente qui sotto. (a breve)",
+        "Puoi trovare il codice sorgente qui sotto.",
         attach=btns
         )
 
@@ -256,11 +256,11 @@ def get_andamento_message(dati, nazione = False):
         "*Nuovi casi positivi*: %s\n"
         % (
             di_cosa, data, format(dati["tamponi"], ',d'),
-            format(dati["totale_casi"], ',d'), format(dati["totale_attualmente_positivi"], ',d'),
+            format(dati["totale_casi"], ',d'), format(dati["totale_positivi"], ',d'),
             format(dati["totale_ospedalizzati"], ',d'), format(dati["ricoverati_con_sintomi"], ',d'),
             format(dati["terapia_intensiva"], ',d'), format(dati["isolamento_domiciliare"], ',d'),
             format(dati["deceduti"], ',d'), format(dati["dimessi_guariti"], ',d'),
-            format(dati["nuovi_attualmente_positivi"], ',d')
+            format(dati["nuovi_positivi"], ',d')
             )
         )
 

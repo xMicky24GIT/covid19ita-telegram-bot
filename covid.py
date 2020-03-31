@@ -34,8 +34,8 @@ def create_grafico_andamento_nazionale():
         data = datetime.strptime(giorno["data"], "%Y-%m-%dT%H:%M:%S")
         data = data.strftime("%d-%m")
         xs.append(data)
-        ultimi_positivi = format(giorno["totale_attualmente_positivi"], ',d')
-        ys.append(giorno["totale_attualmente_positivi"])
+        ultimi_positivi = format(giorno["totale_positivi"], ',d')
+        ys.append(giorno["totale_positivi"])
     plt.plot(xs, ys)
     plt.xlabel('Giorno-Mese')
     plt.xticks(rotation=90)
@@ -57,7 +57,7 @@ def create_grafico_nuovi_positivi_nazionale():
         data = datetime.strptime(giorno["data"], "%Y-%m-%dT%H:%M:%S")
         data = data.strftime("%d-%m")
         xs.append(data)
-        ys.append(giorno["nuovi_attualmente_positivi"])
+        ys.append(giorno["nuovi_positivi"])
 
     plt.plot(xs, ys, marker='.')
 
