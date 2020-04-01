@@ -1,9 +1,11 @@
 # Copyright (C) <2020>  <Michele Viotto>
 import botogram
 import covid
+from database import Covid19Database
 import json
 from datetime import datetime
 import os
+import schedule, time, threading
 
 
 bot = botogram.create("YOUR_API_KEY")
@@ -19,14 +21,34 @@ except OSError:
 @bot.command("start")
 def start_command(chat, message, args):
     """Avvia il bot e manda il menù principale"""
-    #print("Started by %s" % message.sender.first_name)
+    db = Covid19Database()
+    db.add_user(message.sender.id)
     chat.send(get_start_message(), attach=get_start_buttons())
+
+
+# admin menu
+@bot.command("admin")
+def admin_command(chat, message, args):
+    """Mostra il menù per gli admin"""
+    db = Covid19Database()
+    if db.is_admin(message.sender.id):
+        db.set_setting(message.sender.id, "status", "")
+        btns = botogram.Buttons()
+        btns[0].callback("Invia messaggio globale", "callback_messaggio_globale")
+        btns[1].callback("Chiudi", "callback_chiudi_pannello_admin")
+        chat.send(
+            "Benvenuto nel pannello admin.\n"
+            "Clicca i tasti qui sotto per decidere cosa fare.",
+            attach=btns
+            )
 
 
 # CALLBACK DEL BOT
 @bot.callback("callback_start")
 def callback_start(query, chat, message):
     """Menù principale da tastiera"""
+    db = Covid19Database()
+    db.add_user(query.sender.id)
     message.edit(get_start_message(), attach=get_start_buttons())
 
 
@@ -202,14 +224,97 @@ def callback_grafico_nazionale_cumulativo(query, chat, message):
 def callback_bot_info(query, chat, message):
     btns = botogram.Buttons()
     btns[0].url("Codice sorgente", "https://github.com/xMicky24GIT/covid19ita-telegram-bot")
-    btns[1].callback("Indietro", "callback_start")
+    btns[1].url("Dati", "https://github.com/pcm-dpc/COVID-19")
+    btns[2].callback("Indietro", "callback_start")
     message.edit(
         "Ho iniziato a creare questo bot principalmente per trasformare"
         " questa quarantena in qualcosa di positivo ed imparare qualcosa di"
         " nuovo ma allo stesso tempo creare qualcosa di carino e utile.\n"
-        "Puoi trovare il codice sorgente qui sotto.",
+        "Puoi trovare il codice sorgente e i dati qui sotto.",
         attach=btns
         )
+
+
+# Pannello admin
+@bot.callback("callback_pannello_admin")
+def callback_pannello_admin(query, chat, message):
+    db = Covid19Database()
+    if db.is_admin(query.sender.id):
+        db.set_setting(query.sender.id, "status", "")
+        btns = botogram.Buttons()
+        btns[0].callback("Invia messaggio globale", "callback_messaggio_globale")
+        btns[1].callback("Chiudi", "callback_chiudi_pannello_admin")
+        message.edit(
+            "Benvenuto nel pannello admin.\n"
+            "Clicca i tasti qui sotto per decidere cosa fare.",
+            attach=btns
+            )
+
+
+@bot.callback("callback_chiudi_pannello_admin")
+def callback_chiudi_pannello_admin(query, chat, message):
+    message.delete()
+
+
+@bot.callback("callback_messaggio_globale")
+def callback_messaggio_globale(query, chat, message):
+    db = Covid19Database()
+    if db.is_admin(query.sender.id):
+        btns = botogram.Buttons()
+        btns[0].callback("Annulla", "callback_pannello_admin")
+        message.edit(
+            "Invia ora il messaggio che vuoi inviare a tutti gli utenti.",
+            attach=btns
+            )
+        db.set_setting(query.sender.id, "status", "send_global_message")
+
+
+@bot.process_message
+def send_global_message(chat, message):
+    db = Covid19Database()
+    if db.is_admin(message.sender.id):
+        if db.get_setting(message.sender.id, "status") == "send_global_message":
+            db.set_setting(message.sender.id, "status", "")
+            chat.delete_message(message.id - 1)
+            for user in db.get_users():
+                bot.chat(user[0]).send(message.text)
+
+
+# Impostazioni
+@bot.callback("callback_impostazioni")
+def callback_impostazioni(query, chat, message):
+    db = Covid19Database()
+    btns = botogram.Buttons()
+    if db.get_setting(query.sender.id, "notifications") == 1:
+        btns[0].callback(
+            "Disabilita notifiche",
+            "callback_impostazioni_notifche",
+            "disabilita"
+            )
+    else:
+        btns[0].callback(
+            "Abilita notifiche",
+            "callback_impostazioni_notifche",
+            "abilita"
+            )
+    btns[1].callback("Indietro", "callback_start")
+    message.edit(
+        "Da qui puoi gestire le varie impostazioni del bot.\n\n"
+        "*Notifiche*: si tratta di un messaggio per informarti quando vengono"
+        " pubblicati dei nuovi dati dalla protezione civile.",
+        attach=btns
+    )
+
+
+@bot.callback("callback_impostazioni_notifche")
+def callback_impostazioni_notifche(query, data, chat, message):
+    db = Covid19Database()
+    if data == "disabilita":
+        db.set_setting(query.sender.id, "notifications", 0)
+        callback_impostazioni(query, chat, message)
+    elif data == "abilita":
+        db.set_setting(query.sender.id, "notifications", 1)
+        callback_impostazioni(query, chat, message)
 
 
 # FUNZIONI DI APPOGGIO
@@ -219,6 +324,7 @@ def get_start_message():
         "Grazie a me puoi tenere traccia dell'andamento nazionale e"
         " regionale di tutto ciò che riguarda i numeri di"
         " Covid19 in Italia.\n"
+        "I dati vengono aggiornati circa alle 18:30 dalla protezione civile.\n"
         "Clicca uno dei pulsanti qui sotto per iniziare."
     )
 
@@ -228,6 +334,7 @@ def get_start_buttons():
     btns[0].callback("Ultimi andamenti", "callback_ultimi_andamenti")
     btns[1].callback("Grafici", "callback_grafici", "asd") # "asd" is not important
     btns[2].callback("Info", "callback_bot_info")
+    btns[2].callback("Impostazioni", "callback_impostazioni")
 
     return btns
 
@@ -265,5 +372,28 @@ def get_andamento_message(dati, nazione = False):
         )
 
 
+# Notifica gli utenti di un update ai dati
+def send_notifica():
+    db = Covid19Database()
+    for user in db.get_users():
+        if user[1]:
+            bot.chat(user[0]).send(
+                "Sono stati resi disponibili nuovi dati.\n"
+                "Clicca /start per vederli.",
+                )
+
+
+def schedule_send_notfica():
+    schedule.every().day.at("18:30").do(send_notifica)
+    t = threading.currentThread()
+    while getattr(t, "do_run", True):
+        schedule.run_pending()
+        time.sleep(1)
+
+
 if __name__ == "__main__":
+    notifications_thread = threading.Thread(target=schedule_send_notfica, args=())
+    notifications_thread.start()
     bot.run()
+    notifications_thread.do_run = False
+    notifications_thread.join()
