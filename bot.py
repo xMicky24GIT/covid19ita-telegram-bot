@@ -8,7 +8,7 @@ import os
 import schedule, time, threading
 
 
-bot = botogram.create("542350726:AAEgsp53nikOWkv0oGtYGd6NoCRskkcrkNI")
+bot = botogram.create("YOUR_API_KEY")
 
 try:
     os.makedirs('grafici/nazionali')
