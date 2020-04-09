@@ -24,6 +24,26 @@ def get_andamento_regionale(latest=False):
         return r.json()
 
 
+def get_regioni():
+    """
+    Ritorna un dizionario diviso in nord, centro e sud e contine i nomi delle regioni
+    """
+    regioni = {
+        "nord": [],
+        "centro": [],
+        "sud": []
+    }
+    for regione in get_andamento_regionale(latest=True):
+        if regione['codice_regione'] <= 8:
+            regioni['nord'].append(regione['denominazione_regione'])
+        elif 9 <= regione['codice_regione'] <=13:
+            regioni['centro'].append(regione['denominazione_regione'])
+        else:
+            regioni['sud'].append(regione['denominazione_regione'])
+
+    return regioni
+
+
 # grafico andamento positivi totali nazionale
 def create_grafico_andamento_nazionale():
     plt.figure(figsize=(10, 6.3))

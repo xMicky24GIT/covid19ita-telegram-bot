@@ -8,7 +8,7 @@ import os
 import schedule, time, threading
 
 
-bot = botogram.create("YOUR_API_KEY")
+bot = botogram.create("542350726:AAEgsp53nikOWkv0oGtYGd6NoCRskkcrkNI")
 
 try:
     os.makedirs('grafici/nazionali')
@@ -93,37 +93,22 @@ def callback_ultimo_regionale(query, chat, message):
 # messaggio con i bottoni delle varie regioni in base alla zona scelta
 @bot.callback("callback_ultimo_regionale_zona")
 def callback_ultimo_regionale_zona(query, data, chat, message):
-    regioni = covid.get_andamento_regionale(latest=True)
     btns = botogram.Buttons()
-    if data == "nord":
-        # "nome regione", "callback", "id regione presente in {regioni}"
-        btns[0].callback("Valle d'Aosta", "callback_ultimo_regione", "2")
-        btns[0].callback("Piemonte", "callback_ultimo_regione", "1")
-        btns[0].callback("Liguria", "callback_ultimo_regione", "7")
-        btns[1].callback("Trentino A. A.", "callback_ultimo_regione", "4")
-        btns[1].callback("Lombardia", "callback_ultimo_regione", "3")
-        btns[1].callback("Veneto", "callback_ultimo_regione", "5")
-        btns[2].callback("Friuli Venezia Giulia", "callback_ultimo_regione", "6")
-        btns[2].callback("Emilia Romagna", "callback_ultimo_regione", "8")
-        btns[3].callback("Indietro", "callback_ultimo_regionale")
-    elif data == "centro":
-        # "nome regione", "callback", "id regione presente in {regioni}"
-        btns[0].callback("Toscana", "callback_ultimo_regione", "9")
-        btns[0].callback("Marche", "callback_ultimo_regione", "11")
-        btns[0].callback("Umbria", "callback_ultimo_regione", "10")
-        btns[1].callback("Lazio", "callback_ultimo_regione", "12")
-        btns[1].callback("Abruzzo", "callback_ultimo_regione", "13")
-        btns[2].callback("Indietro", "callback_ultimo_regionale")
-    elif data == "sud":
-        # "nome regione", "callback", "id regione presente in {regioni}"
-        btns[0].callback("Molise", "callback_ultimo_regione", "14")
-        btns[0].callback("Puglia", "callback_ultimo_regione", "16")
-        btns[0].callback("Campania", "callback_ultimo_regione", "15")
-        btns[1].callback("Basilicata", "callback_ultimo_regione", "17")
-        btns[1].callback("Calabria", "callback_ultimo_regione", "18")
-        btns[1].callback("Sicilia", "callback_ultimo_regione", "19")
-        btns[2].callback("Sardegna", "callback_ultimo_regione", "20")
-        btns[3].callback("Indietro", "callback_ultimo_regionale")
+    regioni = covid.get_regioni()
+    btn_line = 0
+    for i in range(0, len(regioni[data]), 3):
+        for k in range(0, 3):
+            try:
+                btns[btn_line].callback(
+                    regioni[data][i],
+                    "callback_ultimo_regione",
+                    regioni[data][i] + "_" + data
+                )
+            except IndexError:
+                pass
+            i += 1
+        btn_line += 1
+    btns[btn_line].callback("Indietro", "callback_ultimo_regionale")
 
     message.edit(
         "Seleziona dai tasti qui sotto la regione di cui vuoi vedere i dati.",
@@ -136,16 +121,16 @@ def callback_ultimo_regionale_zona(query, data, chat, message):
 def callback_ultimo_regione(query, data, chat, message):
     """Messaggio per vedere l'ultimo andamento regionale con numero
         nuovi casi rispetto al giorno precedente"""
+    data = data.split('_') # 0: nome regione, 1: nome zona
     btns = botogram.Buttons()
-    btns[0].callback("Indietro", "callback_ultimo_regionale")
+    btns[0].callback("Indietro", "callback_ultimo_regionale_zona", data[1])
     # contiene json con tutti i dati dell'ultimo aggiornamento
     regioni = covid.get_andamento_regionale(latest=True)
     text = ""
     for regione in regioni:
-        if regione["codice_regione"] == int(data):
+        if regione["denominazione_regione"] == data[0]:
             text += (get_andamento_message(regione))
-            if int(data) is not 4:
-                break
+
     message.edit(text,attach=btns)
 
 
@@ -183,7 +168,7 @@ def callback_grafici_nazionali(query, data, chat, message):
 def callback_grafico_nazionale_positivi_attuali(query, chat, message):
     btns = botogram.Buttons()
     btns[0].callback("Indietro", "callback_grafici_nazionali", "delete")
-    covid.create_grafico_andamento_nazionale()
+    #covid.create_grafico_andamento_nazionale()
     # non posso aggiungere una foto ad un messaggio esistente quindi lo elimino
     message.delete()
     chat.send_photo("grafici/nazionali/totali_positivi.png", attach=btns)
@@ -193,7 +178,7 @@ def callback_grafico_nazionale_positivi_attuali(query, chat, message):
 def callback_grafico_nazionale_positivi_nuovi(query, chat, message):
     btns = botogram.Buttons()
     btns[0].callback("Indietro", "callback_grafici_nazionali", "delete")
-    covid.create_grafico_nuovi_positivi_nazionale()
+    #covid.create_grafico_nuovi_positivi_nazionale()
     # non posso aggiungere una foto ad un messaggio esistente quindi lo elimino
     message.delete()
     chat.send_photo("grafici/nazionali/nuovi_positivi.png", attach=btns)
@@ -203,7 +188,7 @@ def callback_grafico_nazionale_positivi_nuovi(query, chat, message):
 def callback_grafico_nazionale_totale_deceduti(query, chat, message):
     btns = botogram.Buttons()
     btns[0].callback("Indietro", "callback_grafici_nazionali", "delete")
-    covid.create_grafico_totale_deceduti_nazionale()
+    #covid.create_grafico_totale_deceduti_nazionale()
     # non posso aggiungere una foto ad un messaggio esistente quindi lo elimino
     message.delete()
     chat.send_photo("grafici/nazionali/totale_deceduti.png", attach=btns)
@@ -213,7 +198,7 @@ def callback_grafico_nazionale_totale_deceduti(query, chat, message):
 def callback_grafico_nazionale_cumulativo(query, chat, message):
     btns = botogram.Buttons()
     btns[0].callback("Indietro", "callback_grafici_nazionali", "delete")
-    covid.create_grafico_cumulativo_nazionale()
+    #covid.create_grafico_cumulativo_nazionale()
     # non posso aggiungere una foto ad un messaggio esistente quindi lo elimino
     message.delete()
     chat.send_photo("grafici/nazionali/cumulativo.png", attach=btns)
@@ -375,6 +360,7 @@ def get_andamento_message(dati, nazione = False):
 # Notifica gli utenti di un update ai dati
 def send_notifica():
     db = Covid19Database()
+    covid.create_grafico_cumulativo_nazionale()
     for user in db.get_users():
         if user[1]:
             bot.chat(user[0]).send(
@@ -392,6 +378,8 @@ def schedule_send_notfica():
 
 
 if __name__ == "__main__":
+    if not os.path.isfile("grafici/nazionali/cumulativo.png"):
+        covid.create_grafico_cumulativo_nazionale()
     notifications_thread = threading.Thread(target=schedule_send_notfica, args=())
     notifications_thread.start()
     bot.run()
