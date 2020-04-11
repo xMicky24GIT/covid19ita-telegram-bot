@@ -1,0 +1,7 @@
+bot_token: YOUR_API_KEY
+
+database:
+  username: YOUR_DB_USERNAME
+  password: YOUR_DB_PASSWORD
+  database: covid19
+  host: localhost

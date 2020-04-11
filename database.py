@@ -3,13 +3,8 @@ import mysql.connector
 
 
 class Covid19Database():
-    def __init__(self):
-        self.db = mysql.connector.connect(
-            host="localhost",
-            user="user",
-            passwd="password",
-            database="covid19"
-        )
+    def __init__(self, config):
+        self.config = config
 
     def add_user(self, user_id):
         cursor = self.db.cursor(prepared=True)
@@ -69,3 +64,12 @@ class Covid19Database():
         cursor.execute(select_query)
 
         return cursor.fetchall()
+
+
+    def init(self):
+        self.db = mysql.connector.connect(
+            host=self.config['host'],
+            user=self.config['username'],
+            passwd=self.config['password'],
+            database=self.config['database']
+        )

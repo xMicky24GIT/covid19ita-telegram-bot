@@ -6,9 +6,12 @@ import json
 from datetime import datetime
 import os
 import schedule, time, threading
+import yaml
 
+config = yaml.load(open('config.yml'), Loader=yaml.FullLoader)
 
-bot = botogram.create("YOUR_API_KEY")
+bot = botogram.create(config.get('bot_token'))
+db = Covid19Database(config.get('database'))
 
 try:
     os.makedirs('grafici/nazionali')
@@ -21,7 +24,7 @@ except OSError:
 @bot.command("start")
 def start_command(chat, message, args):
     """Avvia il bot e manda il menù principale"""
-    db = Covid19Database()
+    db.init()
     db.add_user(message.sender.id)
     chat.send(get_start_message(), attach=get_start_buttons())
 
@@ -30,7 +33,7 @@ def start_command(chat, message, args):
 @bot.command("admin")
 def admin_command(chat, message, args):
     """Mostra il menù per gli admin"""
-    db = Covid19Database()
+    db.init()
     if db.is_admin(message.sender.id):
         db.set_setting(message.sender.id, "status", "")
         btns = botogram.Buttons()
@@ -47,7 +50,7 @@ def admin_command(chat, message, args):
 @bot.callback("callback_start")
 def callback_start(query, chat, message):
     """Menù principale da tastiera"""
-    db = Covid19Database()
+    db.init()
     db.add_user(query.sender.id)
     message.edit(get_start_message(), attach=get_start_buttons())
 
@@ -223,7 +226,7 @@ def callback_bot_info(query, chat, message):
 # Pannello admin
 @bot.callback("callback_pannello_admin")
 def callback_pannello_admin(query, chat, message):
-    db = Covid19Database()
+    db.init()
     if db.is_admin(query.sender.id):
         db.set_setting(query.sender.id, "status", "")
         btns = botogram.Buttons()
@@ -243,7 +246,7 @@ def callback_chiudi_pannello_admin(query, chat, message):
 
 @bot.callback("callback_messaggio_globale")
 def callback_messaggio_globale(query, chat, message):
-    db = Covid19Database()
+    db.init()
     if db.is_admin(query.sender.id):
         btns = botogram.Buttons()
         btns[0].callback("Annulla", "callback_pannello_admin")
@@ -256,7 +259,7 @@ def callback_messaggio_globale(query, chat, message):
 
 @bot.process_message
 def send_global_message(chat, message):
-    db = Covid19Database()
+    db.init()
     if db.is_admin(message.sender.id):
         if db.get_setting(message.sender.id, "status") == "send_global_message":
             db.set_setting(message.sender.id, "status", "")
@@ -268,7 +271,7 @@ def send_global_message(chat, message):
 # Impostazioni
 @bot.callback("callback_impostazioni")
 def callback_impostazioni(query, chat, message):
-    db = Covid19Database()
+    db.init()
     btns = botogram.Buttons()
     if db.get_setting(query.sender.id, "notifications") == 1:
         btns[0].callback(
@@ -293,7 +296,7 @@ def callback_impostazioni(query, chat, message):
 
 @bot.callback("callback_impostazioni_notifche")
 def callback_impostazioni_notifche(query, data, chat, message):
-    db = Covid19Database()
+    db.init()
     if data == "disabilita":
         db.set_setting(query.sender.id, "notifications", 0)
         callback_impostazioni(query, chat, message)
@@ -359,7 +362,7 @@ def get_andamento_message(dati, nazione = False):
 
 # Notifica gli utenti di un update ai dati
 def send_notifica():
-    db = Covid19Database()
+    db.init()
     covid.create_grafico_cumulativo_nazionale()
     for user in db.get_users():
         if user[1]:
