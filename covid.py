@@ -50,17 +50,19 @@ def create_grafico_andamento_nazionale():
     xs = []
     ys = []
     ultimi_positivi = ""
+    variazione_positivi = ""
     for giorno in get_andamento_nazionale():
         data = datetime.strptime(giorno["data"], "%Y-%m-%dT%H:%M:%S")
         data = data.strftime("%d-%m")
         xs.append(data)
         ultimi_positivi = format(giorno["totale_positivi"], ',d')
+        variazione_positvi = format(giorno["variazione_totale_positivi"], ',d')
         ys.append(giorno["totale_positivi"])
     plt.plot(xs, ys)
     plt.xlabel('Giorno-Mese')
     plt.xticks(rotation=90)
     plt.ylabel('Totale positivi')
-    plt.title('Totale attualmente positivi in Italia: %s' % ultimi_positivi)
+    plt.title(f"Totale attualmente positivi in Italia: {ultimi_positivi} [ {variazione_positvi} ]")
     plt.grid(axis='y')
     plt.savefig('grafici/nazionali/totali_positivi.png')
 
