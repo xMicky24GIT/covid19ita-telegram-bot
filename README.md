@@ -10,3 +10,6 @@ Puoi provare il bot qui [@Covid19_ITALIA_bot](https://t.me/Covid19_ITALIA_bot)
 
 # Note
 1. Giuro che prima o poi imparo a scrivere un readme serio o che lo sembri
+
+# Altri progetti basati su questo
+- https://github.com/TrueSkull/Covid19
